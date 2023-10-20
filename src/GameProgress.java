@@ -1,5 +1,6 @@
 import java.io.*;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -29,53 +30,32 @@ public class GameProgress implements Serializable {
                 '}';
     }
 
-    public void saveGames(String address) {
+    public void saveGame(String address, GameProgress gameProgress) {
         try {
             File files = new File("D://Games/savegames/players.txt");
-            if (files.createNewFile())
-                System.out.println("Игра сохранена");
         } catch (Exception e) {
             System.err.println(e);
         }
-
-        FileInputStream fin = null;
-        try {
-            fin = new FileInputStream("D://Games/savegames/players.txt");
-            int i;
-            StringBuilder str = new StringBuilder();
-            while ((i = fin.read()) != -1) {
-                str.append((char) i);
-            }
-            System.out.println(str);
-        } catch (Exception e) {
-            System.err.println(e);
-        } finally {
-            try {
-                if (fin != null) {
-                    fin.close();
-                }
-            } catch (Exception e) {
-                System.err.println(e);
-            }
-        }
-        try (FileWriter wr = new FileWriter("D://Games/savegames/players.txt")) {
-            wr.write(fin.toString());
-            wr.append('\n');
-            wr.append('!');
-            wr.flush();
-        } catch (Exception e) {
-            System.err.println(e);
+        try (
+                FileOutputStream fos = new FileOutputStream("players.txt");
+                ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(gameProgress);
+        } catch (IOException e) {
+            System.err.println(e);;
         }
     }
-    public void zipFiles(Object GameProgress,String address) throws FileNotFoundException {
-        String filePath = "D://Games/savegames/players.txt";
-        String zipPath = "D://Games/savegames/players_zip.zip";
-            try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipPath))) {
-                File fileToZip = new File(filePath);
-                zipOut.putNextEntry(new ZipEntry(fileToZip.getName()));
-                Files.copy(fileToZip.toPath(), zipOut);
-            } catch (Exception ex) {
-                System.out.println(ex.getMessage());
-            }
+    public void zipFiles(String address, GameProgress gameProgress) throws FileNotFoundException {
+        try (ZipOutputStream zout = new ZipOutputStream(new
+                FileOutputStream("zip_output.zip"));
+             FileInputStream fis = new FileInputStream("players.txt")) {
+            ZipEntry entry = new ZipEntry("packed_notes.txt");
+            zout.putNextEntry(entry);
+            byte[] buffer = new byte[fis.available()];
+            fis.read(buffer);
+            zout.write(buffer);
+            zout.closeEntry();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
         }
     }
